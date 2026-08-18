@@ -108,6 +108,7 @@ select { width: 100%; }
 .zoom-buttons { padding-right: 8px; border-right: 1px solid var(--border); }
 .tree-viewport { overflow: auto; margin-top: 16px; border-radius: 11px; background: var(--surface-raised); }
 #family-tree { display: block; min-width: 100%; }
+.tree-gesture-hint { display: none; }
 .tree-status { color: var(--muted); font-size: .88rem; margin-top: 10px; }
 .person-card { position: sticky; top: 16px; padding: 18px; }
 .person-card h2 { margin-top: 5px; }
@@ -146,14 +147,32 @@ footer { color: var(--muted); font-size: .82rem; line-height: 1.5; padding: 4px 
 
 @media (max-width: 600px) {
   :root { --node-width: 148px; --node-height: 78px; }
+  html { -webkit-text-size-adjust: 100%; }
   .site-header { padding-top: 24px; flex-direction: column; }
   .site-header, main, footer { width: min(100% - 20px, 1440px); }
+  .site-header .button { width: 100%; }
   .controls-panel, .tree-panel, .person-card { border-radius: 12px; }
   .controls-panel, .tree-panel, .person-card { padding: 14px; }
-  .search-row .button { flex: 1 1 100%; }
+  .button, input, select { min-height: 44px; }
+  input, select { font-size: 16px; }
+  .search-row .button, .relationship-form > div, .relationship-form input { flex: 1 1 100%; }
+  .button-row .button, .relationship-form > .button { flex: 1 1 calc(50% - 4px); }
   .tree-heading { align-items: start; flex-direction: column; }
-  .tree-tools { justify-content: start; }
-  .zoom-buttons { padding-right: 0; border-right: 0; }
+  .tree-tools { width: 100%; justify-content: start; }
+  .zoom-buttons, .export-buttons { display: grid; width: 100%; }
+  .zoom-buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-right: 0; border-right: 0; }
+  .export-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .zoom-buttons .button, .export-buttons .button { width: 100%; padding-inline: 6px; white-space: nowrap; }
+  .tree-viewport {
+    min-height: 320px;
+    max-height: min(66svh, 560px);
+    margin-top: 12px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    scrollbar-width: thin;
+  }
+  .tree-gesture-hint { display: block; color: var(--muted); font-size: .82rem; margin: 9px 0 0; }
 }
 
 @media print {

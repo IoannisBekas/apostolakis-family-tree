@@ -659,7 +659,14 @@
     const targetBox = target.getBoundingClientRect();
     const viewportBox = els.treeViewport.getBoundingClientRect();
     const nextLeft = els.treeViewport.scrollLeft + targetBox.left - viewportBox.left - (els.treeViewport.clientWidth - targetBox.width) / 2;
-    els.treeViewport.scrollTo({ left: Math.max(0, nextLeft), behavior: "smooth" });
+    const compact = window.matchMedia("(max-width: 600px)").matches;
+    const nextTop = els.treeViewport.scrollTop + targetBox.top - viewportBox.top - (els.treeViewport.clientHeight - targetBox.height) / 2;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    els.treeViewport.scrollTo({
+      left: Math.max(0, nextLeft),
+      top: compact ? Math.max(0, nextTop) : els.treeViewport.scrollTop,
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
   }
 
   function updatePlaceOptions() {
