@@ -9,6 +9,20 @@
     "Λαγκά", "Ελευσίνα", "Ορθές", "Αλφά", "Βόλος", "Ανώγεια", "Ζωνιανά", "Αμάρι",
     "Αργυρούπολη", "Πάνορμος", "Σίσσες", "Μπαλί", "Αξός", "Κρήτη",
   ];
+  const fallbackAccents = new Map([
+    ["αννα", "Άννα"], ["αντωνια", "Αντωνία"], ["αποστολακης", "Αποστολάκης"], ["αποστολακη", "Αποστολάκη"],
+    ["αποστολης", "Αποστόλης"], ["αργυρουλα", "Αργυρούλα"], ["αθανασιος", "Αθανάσιος"], ["βασιλικος", "Βασιλικός"],
+    ["βασιλικη", "Βασιλική"], ["βασιλης", "Βασίλης"], ["γεωργιος", "Γεώργιος"], ["γεωργιου", "Γεωργίου"],
+    ["γιαννης", "Γιάννης"], ["γιωργης", "Γιώργης"], ["γιωργος", "Γιώργος"], ["δημητρουλης", "Δημητρούλης"],
+    ["δημητριος", "Δημήτριος"], ["ελενα", "Έλενα"], ["ελενη", "Ελένη"], ["ευαγγελια", "Ευαγγελία"],
+    ["ζαχαριας", "Ζαχαρίας"], ["ζαχαριαδου", "Ζαχαριάδου"], ["ηλιας", "Ηλίας"], ["θεοδωρος", "Θεόδωρος"],
+    ["ιακωβος", "Ιάκωβος"], ["ιακωβου", "Ιακώβου"], ["ιωαννης", "Ιωάννης"], ["ιωαννου", "Ιωάννου"],
+    ["καλλιοπη", "Καλλιόπη"], ["κωνσταντινος", "Κωνσταντίνος"], ["κωστας", "Κώστας"], ["κωστακης", "Κωστάκης"],
+    ["κωσταντης", "Κωσταντής"], ["κυριακος", "Κυριάκος"], ["μαρια", "Μαρία"], ["μανωλης", "Μανώλης"],
+    ["μαρκος", "Μάρκος"], ["μιχαλης", "Μιχάλης"], ["νικολαος", "Νικόλαος"], ["νικολης", "Νικολής"],
+    ["παντελης", "Παντελής"], ["ραφαηλ", "Ραφαήλ"], ["σταυρος", "Σταύρος"], ["στελιος", "Στέλιος"],
+    ["σωτηρης", "Σωτήρης"], ["χρηστος", "Χρήστος"], ["χρυσουλα", "Χρυσούλα"], ["χρυση", "Χρυσή"],
+  ]);
 
   const els = {
     searchForm: document.getElementById("person-search"),
@@ -54,6 +68,7 @@
   let familyData;
   let nodesById;
   let familiesByPrincipal;
+  let accentVocabulary = new Map(fallbackAccents);
   let currentDrawing = { width: 900, height: 400 };
   let pendingResize;
 
@@ -67,9 +82,72 @@
       .trim();
   }
 
+  function displayLabel(value) {
+    const compact = String(value || "")
+      .normalize("NFC")
+      .replace(/\s+/g, " ")
+      .replace(/\s*\(\s*/g, " (")
+      .replace(/\s*\)/g, ")")
+      .replace(/\s*«\s*/g, " «")
+      .replace(/\s*»\s*/g, "» ")
+      .replace(/\s*-\s*/g, "-")
+      .replace(/\s+/g, " ")
+      .trim();
+    return compact.toLocaleLowerCase("el-GR").replace(/\p{L}+/gu, normalizeNameWord);
+  }
+
+  function titleCaseWord(word) {
+    const lowered = word.toLocaleLowerCase("el-GR");
+    return lowered.replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase("el-GR"));
+  }
+
+  function normalizeNameWord(word) {
+    return accentVocabulary.get(normalize(word)) || titleCaseWord(word);
+  }
+
+  function displayNarrative(value) {
+    const compact = String(value)
+      .normalize("NFC")
+      .replace(/([.,;:])(?=[\p{L}])/gu, "$1 ")
+      .replace(/\s*\(\s*/g, " (")
+      .replace(/\s*\)/g, ")")
+      .replace(/\s*«\s*/g, " «")
+      .replace(/\s*»\s*/g, "» ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return compact.replace(/\p{Lu}{2,}/gu, normalizeNameWord)
+      .replace(/\.\s*Συζ\.?/g, ". Συζ.")
+      .replace(/:\s*/g, ": ");
+  }
+
+  function buildAccentVocabulary() {
+    const candidates = new Map();
+    const addCandidate = (token) => {
+      if (!token || token === token.toLocaleUpperCase("el-GR")) return;
+      const key = normalize(token);
+      const value = titleCaseWord(token);
+      const option = candidates.get(key) || new Map();
+      option.set(value, (option.get(value) || 0) + 1);
+      candidates.set(key, option);
+    };
+    const addText = (text) => {
+      String(text || "").match(/\p{L}+/gu)?.forEach(addCandidate);
+    };
+    familyData.nodes.forEach((person) => [person.label, person.detail, person.source].forEach(addText));
+    familyData.families.forEach((family) => {
+      addText(family.spouse);
+      family.children.forEach((child) => addText(child.label));
+    });
+    candidates.forEach((options, key) => {
+      if (fallbackAccents.has(key)) return;
+      const best = [...options.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (best) accentVocabulary.set(key, best);
+    });
+  }
+
   function personName(person) {
-    const normalized = normalize(person.label);
-    return normalized.includes("αποστολακ") ? person.label : person.label + " Αποστολάκης";
+    const label = displayLabel(person.label);
+    return normalize(label).includes("αποστολακ") ? label : label + " Αποστολάκης";
   }
 
   function personFromId(id) {
@@ -172,7 +250,7 @@
         return { person, score };
       })
       .filter((result) => result.score > 0)
-      .sort((a, b) => b.score - a.score || a.person.generation - b.person.generation || a.person.label.localeCompare(b.person.label, "el"))
+      .sort((a, b) => b.score - a.score || a.person.generation - b.person.generation || displayLabel(a.person.label).localeCompare(displayLabel(b.person.label), "el"))
       .map((result) => result.person);
   }
 
@@ -268,6 +346,7 @@
   }
 
   function drawPerson(layer, person, x, y, size, options = {}) {
+    const label = displayLabel(person.label);
     const interactive = person.recorded !== false;
     const classNames = ["node"];
     if (person.id === state.selectedId) classNames.push("is-selected");
@@ -278,10 +357,10 @@
       "data-person-id": person.id,
       tabindex: interactive ? 0 : -1,
       role: interactive ? "button" : "img",
-      "aria-label": interactive ? person.label + ". " + (options.actionLabel || "Επιλογή προσώπου.") : person.label + ". Αναφέρεται χωρίς πρόσθετα στοιχεία.",
+      "aria-label": interactive ? label + ". " + (options.actionLabel || "Επιλογή προσώπου.") : label + ". Αναφέρεται χωρίς πρόσθετα στοιχεία.",
     });
     group.append(createSvg("rect", { width: size.width, height: size.height, rx: 10, ry: 10 }));
-    appendText(group, size.width / 2, 29, person.label, "", size.width < 160 ? 16 : 19);
+    appendText(group, size.width / 2, 29, label, "", size.width < 160 ? 16 : 19);
     appendText(group, size.width / 2, size.height - 15, nodeMeta(person), "node-meta", 26);
     if (interactive && options.onSelect) {
       group.addEventListener("click", options.onSelect);
@@ -297,14 +376,15 @@
   }
 
   function drawSpouse(layer, label, x, y, size) {
+    const normalizedLabel = label === "Σύζυγος: δεν καταγράφεται" ? label : displayLabel(label);
     const group = createSvg("g", {
       class: "spouse-node",
       transform: "translate(" + x + " " + y + ")",
       role: "img",
-      "aria-label": label,
+      "aria-label": normalizedLabel,
     });
     group.append(createSvg("rect", { width: size.width, height: size.height, rx: 10, ry: 10 }));
-    appendText(group, size.width / 2, 31, label, "", size.width < 160 ? 16 : 20);
+    appendText(group, size.width / 2, 31, normalizedLabel, "", size.width < 160 ? 16 : 20);
     group.append(createSvg("text", { x: size.width / 2, y: size.height - 15, "text-anchor": "middle", class: "node-meta" }));
     group.lastChild.textContent = "σύζυγος";
     layer.append(group);
@@ -327,6 +407,10 @@
     return allPathIds().has(personId) || relationshipIds().has(personId);
   }
 
+  function spouseLabel(family, unknownLabel = "Σύζυγος: δεν καταγράφεται") {
+    return family.spouse ? displayLabel(family.spouse) : unknownLabel;
+  }
+
   function renderExplore() {
     const levels = buildExploreLevels();
     const size = nodeSize();
@@ -339,7 +423,7 @@
     let y = 28;
 
     levels.forEach((level) => {
-      const spouseLabel = level.family.spouse || "Σύζυγος: δεν καταγράφεται";
+      const spouseName = spouseLabel(level.family);
       const spouseVisible = state.showSpouses && Boolean(level.family.spouse || level.parent.id !== "root");
       const pair = familyCoordinates(canvasWidth, size, spouseVisible);
       if (pair.lineStart !== null) appendLine(connectors, pair.lineStart, y + size.height / 2, pair.lineEnd, y + size.height / 2, routeFor(level.parent.id));
@@ -348,7 +432,7 @@
         actionLabel: "Επιλογή για λεπτομέρειες.",
         onSelect: () => setSelected(level.parent.id),
       });
-      if (spouseVisible) drawSpouse(nodes, spouseLabel, pair.spouseX, y, size);
+      if (spouseVisible) drawSpouse(nodes, spouseName, pair.spouseX, y, size);
 
       const children = visibleChildren(level.family);
       if (children.length > 0) {
@@ -405,11 +489,11 @@
         actionLabel: "Επιλογή για λεπτομέρειες.",
         onSelect: () => setSelected(person.id),
       });
-      if (spouseVisible) drawSpouse(nodes, family.spouse || "Σύζυγος: δεν καταγράφεται", pair.spouseX, y, size);
+      if (spouseVisible) drawSpouse(nodes, spouseLabel(family), pair.spouseX, y, size);
       y += size.height + 38;
     });
     els.treeKicker.textContent = "Εστιασμένη προβολή";
-    els.treeTitle.textContent = "Πρόγονοι του/της " + selected.label;
+    els.treeTitle.textContent = "Πρόγονοι του/της " + displayLabel(selected.label);
     finishDrawing(canvasWidth, y + 8);
     els.treeStatus.textContent = "Η γραμμή καταγωγής από τον γενάρχη έως το επιλεγμένο πρόσωπο.";
   }
@@ -433,7 +517,7 @@
       actionLabel: "Επιλογή για λεπτομέρειες.",
       onSelect: () => setSelected(selected.id),
     });
-    if (spouseVisible) drawSpouse(nodes, family.spouse || "Σύζυγος: δεν καταγράφεται", pair.spouseX, y, size);
+    if (spouseVisible) drawSpouse(nodes, spouseLabel(family), pair.spouseX, y, size);
     if (children.length > 0) {
       const totalWidth = children.length * size.width + (children.length - 1) * size.gap;
       const startX = (canvasWidth - totalWidth) / 2;
@@ -455,11 +539,11 @@
         });
       });
       els.treeKicker.textContent = "Εστιασμένη προβολή";
-      els.treeTitle.textContent = "Απόγονοι του/της " + selected.label;
+      els.treeTitle.textContent = "Απόγονοι του/της " + displayLabel(selected.label);
       finishDrawing(canvasWidth, childY + size.height + 44);
     } else {
       els.treeKicker.textContent = "Εστιασμένη προβολή";
-      els.treeTitle.textContent = "Απόγονοι του/της " + selected.label;
+      els.treeTitle.textContent = "Απόγονοι του/της " + displayLabel(selected.label);
       finishDrawing(canvasWidth, y + size.height + 44);
     }
     els.treeStatus.textContent = children.length ? "Επίλεξε ένα παιδί για να συνεχίσεις στον επόμενο κλάδο." : "Δεν καταγράφονται παιδιά για τον τρέχοντα γάμο.";
@@ -492,15 +576,15 @@
     const family = activeUnion(person.id);
     const places = placesFor(person);
     const children = childrenOf(family).filter((child) => child.recorded);
-    const spouse = family.spouse || "Δεν καταγράφεται";
+    const spouse = spouseLabel(family, "Δεν καταγράφεται");
     els.personCard.replaceChildren();
     const eyebrow = document.createElement("p");
     eyebrow.className = "eyebrow";
     eyebrow.textContent = "Επιλεγμένο πρόσωπο";
     const heading = document.createElement("h2");
-    heading.textContent = person.label;
+    heading.textContent = displayLabel(person.label);
     const summary = document.createElement("p");
-    summary.textContent = person.detail || "Δεν υπάρχει πρόσθετη βιογραφική σημείωση στο αρχείο.";
+    summary.textContent = person.detail ? displayNarrative(person.detail) : "Δεν υπάρχει πρόσθετη βιογραφική σημείωση στο αρχείο.";
     const details = document.createElement("dl");
     addDefinition(details, "Γενιά", person.generation ? person.generation + "η" : "—");
     addDefinition(details, "Τόποι", places.length ? places.join(", ") : "Δεν καταγράφεται");
@@ -518,7 +602,7 @@
         const button = document.createElement("button");
         button.className = "person-link";
         button.type = "button";
-        button.textContent = child.label;
+        button.textContent = displayLabel(child.label);
         button.addEventListener("click", () => setSelected(child.id, { openLineage: true, focus: true }));
         item.append(button);
         list.append(item);
@@ -527,7 +611,7 @@
     }
     if (person.source) {
       const sourceHeading = document.createElement("dt");
-      sourceHeading.textContent = "Απόσπασμα αρχείου";
+      sourceHeading.textContent = "Απόσπασμα αρχείου (πρωτότυπη γραφή)";
       const source = document.createElement("dd");
       source.className = "source";
       source.textContent = person.source;
@@ -597,11 +681,11 @@
     const fragment = document.createDocumentFragment();
     familyData.nodes
       .slice()
-      .sort((a, b) => a.generation - b.generation || a.label.localeCompare(b.label, "el"))
+      .sort((a, b) => a.generation - b.generation || displayLabel(a.label).localeCompare(displayLabel(b.label), "el"))
       .forEach((person) => {
         const option = document.createElement("option");
         option.value = personName(person);
-        option.label = person.label + " · " + person.generation + "η γενιά";
+        option.label = displayLabel(person.label) + " · " + person.generation + "η γενιά";
         fragment.append(option);
       });
     els.searchOptions.replaceChildren(fragment);
@@ -806,7 +890,7 @@
       state.relationship = relationship;
       els.relativeOne.value = personName(first);
       els.relativeTwo.value = personName(second);
-      els.relationshipStatus.textContent = "Κοινός πρόγονος: " + personFromId(relationship.commonId).label + ". Η διαδρομή τονίστηκε στο δένδρο.";
+      els.relationshipStatus.textContent = "Κοινός πρόγονος: " + displayLabel(personFromId(relationship.commonId).label) + ". Η διαδρομή τονίστηκε στο δένδρο.";
       render();
     });
     els.clearRelationshipButton.addEventListener("click", () => {
@@ -843,6 +927,7 @@
         families.push(family);
         familiesByPrincipal.set(family.principal_id, families);
       });
+      buildAccentVocabulary();
       updatePersonOptions();
       updatePlaceOptions();
       readHash();
