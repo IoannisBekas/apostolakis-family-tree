@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Διαδραστικό γενεαλογικό δέντρο της οικογένειας Αποστολάκη.">
+    <title>Οικογένεια Αποστολάκη</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Γενεαλογικό αρχείο</p>
+        <h1>Οικογένεια Αποστολάκη</h1>
+        <p class="intro">Αναζήτησε ένα πρόσωπο ή άνοιξε έναν κλάδο. Οι ανοιχτές γενιές παραμένουν πάντα ορατές.</p>
+      </div>
+      <button id="share-button" class="button button-primary" type="button">Αντιγραφή συνδέσμου</button>
+    </header>
+
+    <main>
+      <section class="controls-panel" aria-label="Εργαλεία γενεαλογικού δένδρου">
+        <form id="person-search" class="control-group search-form">
+          <label for="person-search-input">Αναζήτηση προσώπου</label>
+          <div class="search-row">
+            <input id="person-search-input" type="search" list="person-options" placeholder="π.χ. Βασίλης Αποστολάκης" autocomplete="off">
+            <datalist id="person-options"></datalist>
+            <button class="button button-primary" type="submit">Άνοιγμα διαδρομής</button>
+          </div>
+          <p id="search-status" class="helper" aria-live="polite"></p>
+        </form>
+
+        <div class="control-grid">
+          <fieldset class="control-group">
+            <legend>Προβολή</legend>
+            <div class="button-row" role="group" aria-label="Τρόπος προβολής">
+              <button class="button view-button" data-view="explore" type="button" aria-pressed="true">Δένδρο</button>
+              <button class="button view-button" data-view="ancestors" type="button" aria-pressed="false">Πρόγονοι</button>
+              <button class="button view-button" data-view="descendants" type="button" aria-pressed="false">Απόγονοι</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="control-group">
+            <legend>Εμφάνιση</legend>
+            <label class="select-label" for="place-filter">Τόπος</label>
+            <select id="place-filter"></select>
+            <label class="check-label" for="spouse-toggle">
+              <input id="spouse-toggle" type="checkbox" checked>
+              Εμφάνιση συζύγων
+            </label>
+          </fieldset>
+
+          <fieldset class="control-group">
+            <legend>Πλοήγηση</legend>
+            <div class="button-row">
+              <button id="back-button" class="button" type="button">Σύμπτυξη κλάδου</button>
+              <button id="home-button" class="button" type="button">Γενάρχης</button>
+              <button id="focus-button" class="button" type="button">Εστίαση</button>
+            </div>
+            <div class="button-row">
+              <button id="previous-union-button" class="button" type="button">Προηγούμενος γάμος</button>
+              <button id="next-union-button" class="button" type="button">Επόμενος γάμος</button>
+            </div>
+            <div class="button-row">
+              <button id="zoom-out-button" class="button" type="button">− Ζουμ</button>
+              <button id="zoom-in-button" class="button" type="button">+ Ζουμ</button>
+              <button id="fit-button" class="button" type="button">Προσαρμογή</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <form id="relationship-form" class="control-group relationship-form">
+          <div>
+            <label for="relative-one">Διαδρομή συγγένειας</label>
+            <p class="helper">Επίλεξε δύο πρόσωπα για να τονιστεί η κοινή καταγωγή τους.</p>
+          </div>
+          <input id="relative-one" type="search" list="person-options" placeholder="Πρώτο πρόσωπο">
+          <input id="relative-two" type="search" list="person-options" placeholder="Δεύτερο πρόσωπο">
+          <button class="button" type="submit">Εμφάνιση</button>
+          <button id="clear-relationship-button" class="button" type="button">Καθαρισμός</button>
+          <p id="relationship-status" class="helper" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="workspace" aria-label="Δένδρο και στοιχεία προσώπου">
+        <section class="tree-panel" aria-labelledby="tree-title">
+          <div class="tree-heading">
+            <div>
+              <p class="eyebrow" id="tree-kicker">Εξερεύνηση</p>
+              <h2 id="tree-title">Οικογενειακό δένδρο</h2>
+            </div>
+            <div class="export-buttons">
+              <button id="export-image-button" class="button" type="button">Εξαγωγή PNG</button>
+              <button id="export-pdf-button" class="button" type="button">Εκτύπωση / PDF</button>
+            </div>
+          </div>
+          <div id="tree-viewport" class="tree-viewport" tabindex="0" aria-label="Διαδραστικό γενεαλογικό δένδρο">
+            <svg id="family-tree" role="img" aria-labelledby="tree-svg-title tree-svg-description" xmlns="http://www.w3.org/2000/svg">
+              <title id="tree-svg-title">Οικογενειακό δένδρο Αποστολάκη</title>
+              <desc id="tree-svg-description">Επίλεξε ένα πρόσωπο για να ανοίξεις τον γάμο και τα παιδιά του.</desc>
+            </svg>
+          </div>
+          <p id="tree-status" class="tree-status" aria-live="polite"></p>
+        </section>
+
+        <aside id="person-card" class="person-card" aria-live="polite">
+          <p class="eyebrow">Επιλεγμένο πρόσωπο</p>
+          <h2>Αποστόλης Δημητρούλης</h2>
+          <p>Γενάρχης της οικογένειας Αποστολάκη.</p>
+        </aside>
+      </section>
+    </main>
+
+    <footer>
+      Τα στοιχεία προέρχονται από το διαθέσιμο οικογενειακό αρχείο. Οι σχέσεις που δεν καταγράφονται εμφανίζονται ρητά ως άγνωστες.
+    </footer>
+
+    <script src="assets/app.js" defer></script>
+  </body>
+</html>
