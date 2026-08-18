@@ -68,7 +68,7 @@ fieldset.control-group:first-child { border-inline-start: 0; padding-inline-star
 legend, .control-group > label { display: block; font-weight: 700; margin-bottom: 8px; }
 
 .search-form label { font-weight: 700; }
-.search-row, .button-row, .relationship-form, .tree-heading, .export-buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.search-row, .button-row, .relationship-form, .tree-heading, .tree-tools, .zoom-buttons, .export-buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .search-row input { flex: 1 1 260px; }
 input, select {
   min-height: 40px;
@@ -104,6 +104,8 @@ select { width: 100%; }
 .tree-panel { min-width: 0; padding: 18px; }
 .tree-heading { justify-content: space-between; gap: 12px; }
 .tree-heading .eyebrow { margin-bottom: 4px; }
+.tree-tools { justify-content: flex-end; }
+.zoom-buttons { padding-right: 8px; border-right: 1px solid var(--border); }
 .tree-viewport { overflow: auto; margin-top: 16px; border-radius: 11px; background: var(--surface-raised); }
 #family-tree { display: block; min-width: 100%; }
 .tree-status { color: var(--muted); font-size: .88rem; margin-top: 10px; }
@@ -150,6 +152,8 @@ footer { color: var(--muted); font-size: .82rem; line-height: 1.5; padding: 4px 
   .controls-panel, .tree-panel, .person-card { padding: 14px; }
   .search-row .button { flex: 1 1 100%; }
   .tree-heading { align-items: start; flex-direction: column; }
+  .tree-tools { justify-content: start; }
+  .zoom-buttons { padding-right: 0; border-right: 0; }
 }
 
 @media print {

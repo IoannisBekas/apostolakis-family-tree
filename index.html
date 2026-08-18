@@ -61,11 +61,6 @@
               <button id="previous-union-button" class="button" type="button">Προηγούμενος γάμος</button>
               <button id="next-union-button" class="button" type="button">Επόμενος γάμος</button>
             </div>
-            <div class="button-row">
-              <button id="zoom-out-button" class="button" type="button">− Ζουμ</button>
-              <button id="zoom-in-button" class="button" type="button">+ Ζουμ</button>
-              <button id="fit-button" class="button" type="button">Προσαρμογή</button>
-            </div>
           </fieldset>
         </div>
 
@@ -89,9 +84,16 @@
               <p class="eyebrow" id="tree-kicker">Εξερεύνηση</p>
               <h2 id="tree-title">Οικογενειακό δένδρο</h2>
             </div>
-            <div class="export-buttons">
+            <div class="tree-tools" aria-label="Εργαλεία δένδρου">
+              <div class="zoom-buttons" role="group" aria-label="Ζουμ δένδρου">
+                <button id="zoom-out-button" class="button" type="button">− Ζουμ</button>
+                <button id="zoom-in-button" class="button" type="button">+ Ζουμ</button>
+                <button id="fit-button" class="button" type="button">Προσαρμογή</button>
+              </div>
+              <div class="export-buttons">
               <button id="export-image-button" class="button" type="button">Εξαγωγή PNG</button>
               <button id="export-pdf-button" class="button" type="button">Εκτύπωση / PDF</button>
+              </div>
             </div>
           </div>
           <div id="tree-viewport" class="tree-viewport" tabindex="0" aria-label="Διαδραστικό γενεαλογικό δένδρο">
